@@ -29,9 +29,9 @@ try {
     $mail->Debugoutput = function($str, $level) {$GLOBALS['status'][] = $str;};
 
     // Настройки вашей почты
-    $mail->Host       = 'smtp.timeweb.ru'; // SMTP сервера вашей почты
-    $mail->Username   = 'info@vmesteshag.ru'; // Логин на почте
-    $mail->Password   = 'gYj8vM21'; // Пароль на почте
+    $mail->Host       = 'smtp.ti....b.ru'; // SMTP сервера вашей почты
+    $mail->Username   = 'info@vm....shag.ru'; // Логин на почте
+    $mail->Password   = '........'; // Пароль на почте
     $mail->SMTPSecure = 'ssl';
     $mail->Port       = 465;
     $mail->setFrom('info@vmesteshag.ru', 'vmesteshag.ru'); // Адрес самой почты и имя отправителя

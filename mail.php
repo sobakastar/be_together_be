@@ -1,53 +1,71 @@
 <?php
+// Файлы phpmailer
+require 'phpmailer/PHPMailer.php';
+require 'phpmailer/SMTP.php';
+require 'phpmailer/Exception.php';
 
-$method = $_SERVER['REQUEST_METHOD'];
-
-//Script Foreach
-$c = true;
-if ( $method === 'POST' ) {
-
-	$project_name = trim($_POST["project_name"]);
-	$admin_email  = trim($_POST["admin_email"]);
-	$form_subject = trim($_POST["form_subject"]);
-
-	foreach ( $_POST as $key => $value ) {
-		if ( $value != "" && $key != "project_name" && $key != "admin_email" && $key != "form_subject" ) {
-			$message .= "
-			" . ( ($c = !$c) ? '<tr>':'<tr style="background-color: #f8f8f8;">' ) . "
-				<td style='padding: 10px; border: #e9e9e9 1px solid;'><b>$key</b></td>
-				<td style='padding: 10px; border: #e9e9e9 1px solid;'>$value</td>
-			</tr>
-			";
-		}
+$body = '<h1>Заявка с сайта "Быть вместе"!</h1>';
+	
+	if(trim(!empty($_POST['name']))){
+		$body.='<p><strong>Имя:</strong> '.$_POST['name'].';</p>';
 	}
-} else if ( $method === 'GET' ) {
-
-	$project_name = trim($_GET["project_name"]);
-	$admin_email  = trim($_GET["admin_email"]);
-	$form_subject = trim($_GET["form_subject"]);
-
-	foreach ( $_GET as $key => $value ) {
-		if ( $value != "" && $key != "project_name" && $key != "admin_email" && $key != "form_subject" ) {
-			$message .= "
-			" . ( ($c = !$c) ? '<tr>':'<tr style="background-color: #f8f8f8;">' ) . "
-				<td style='padding: 10px; border: #e9e9e9 1px solid;'><b>$key</b></td>
-				<td style='padding: 10px; border: #e9e9e9 1px solid;'>$value</td>
-			</tr>
-			";
-		}
+	if(trim(!empty($_POST['email']))){
+		$body.='<p><strong>E-mail:</strong> '.$_POST['email'].';</p>';
 	}
+	if(trim(!empty($_POST['phone']))){
+		$body.='<p><strong>Телефон:</strong> '.$_POST['phone'].';</p>';
+	}
+	if(trim(!empty($_POST['message']))){
+		$body.='<p><strong>Сообщение:</strong> '.$_POST['message'].';</p>';
+	}
+
+// Настройки PHPMailer
+$mail = new PHPMailer\PHPMailer\PHPMailer();
+try {
+    $mail->isSMTP();   
+    $mail->CharSet = "UTF-8";
+    $mail->SMTPAuth   = true;
+    //$mail->SMTPDebug = 2;
+    $mail->Debugoutput = function($str, $level) {$GLOBALS['status'][] = $str;};
+
+    // Настройки вашей почты
+    $mail->Host       = 'smtp.timeweb.ru'; // SMTP сервера вашей почты
+    $mail->Username   = 'info@vmesteshag.ru'; // Логин на почте
+    $mail->Password   = 'gYj8vM21'; // Пароль на почте
+    $mail->SMTPSecure = 'ssl';
+    $mail->Port       = 465;
+    $mail->setFrom('info@vmesteshag.ru', 'vmesteshag.ru'); // Адрес самой почты и имя отправителя
+
+    // Получатель письма
+    $mail->addAddress('vmesteshag@mail.ru');  
+    //$mail->addAddress('youremail@gmail.com'); // Ещё один, если нужен
+
+    // Прикрипление файлов к письму
+/* if (!empty($file['name'][0])) {
+    for ($ct = 0; $ct < count($file['tmp_name']); $ct++) {
+        $uploadfile = tempnam(sys_get_temp_dir(), sha1($file['name'][$ct]));
+        $filename = $file['name'][$ct];
+        if (move_uploaded_file($file['tmp_name'][$ct], $uploadfile)) {
+            $mail->addAttachment($uploadfile, $filename);
+            $rfile[] = "Файл $filename прикреплён";
+        } else {
+            $rfile[] = "Не удалось прикрепить файл $filename";
+        }
+    }   
+} */
+// Отправка сообщения
+$mail->isHTML(true);
+$mail->Subject = 'Заявка';
+$mail->Body = $body;    
+
+// Проверяем отравленность сообщения
+if ($mail->send()) {$result = "success";} 
+else {$result = "error";}
+
+} catch (Exception $e) {
+    $result = "error";
+    $status = "Сообщение не было отправлено. Причина ошибки: {$mail->ErrorInfo}";
 }
 
-$message = "<table style='width: 100%;'>$message</table>";
-
-function adopt($text) {
-	return '=?UTF-8?B?'.Base64_encode($text).'?=';
-}
-
-$headers = "MIME-Version: 1.0" . PHP_EOL .
-"Content-Type: text/html; charset=utf-8" . PHP_EOL .
-'From: '.adopt($project_name).' <'.$admin_email.'>' . PHP_EOL .
-'Reply-To: '.$admin_email.'' . PHP_EOL;
-
-mail($admin_email, adopt($form_subject), $message, $headers );
-?>
+// Отображение результата
+echo json_encode(["result" => $result, "resultfile" => $rfile, "status" => $status]);
